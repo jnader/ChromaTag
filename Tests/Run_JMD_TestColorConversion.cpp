@@ -1,19 +1,19 @@
 /*
  //--------------------------------------------------------------------//
- 
+
  --------------------------
  Joseph DeGol
  UIUC Fall 2017
  --------------------------
  Run_JMD_TestColorConversion: Version 1.0
  --------------------------
- 
+
  ----------------------------------------------------------------
  Run_JMD_TestColorConversion.cpp
  This program tests different ways of converting pixels to LAB
  and examines the amount of time it takes
  ----------------------------------------------------------------
- 
+
  //--------------------------------------------------------------------//
 */
 
@@ -52,7 +52,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #endif
 
-#define HASH_RGB(R, G, B) B + (G << 8) + (R << 16) 
+#define HASH_RGB(R, G, B) B + (G << 8) + (R << 16)
 
 //--------------------------------------------------------------------//
 //------------------------- End Includes -----------------------------//
@@ -93,7 +93,7 @@ int E = -1;
 std::string Input_Image;
 
 /*--- End Options ---*/
-	
+
 //--------------------------------------------------------------------//
 //---------------------------- Globals -------------------------------//
 //--------------------------------------------------------------------//
@@ -229,15 +229,15 @@ vector<float> CCTable2::myLAB_AVec;
 //====================================================================//
 
 int main( int argc, char **argv )
-{   
+{
 
 	//----------------------------------------------------------------//
 	//--------------------------- Options ----------------------------//
 	//----------------------------------------------------------------//
-	
+
 	//description vector
 	vector<string> description_vector;
-	
+
 	/*----- Set Colors -----*/
 	myWriter.SetProgramHeaderColor(JMD::JMD_Utils_Writer::WHITE,JMD::JMD_Utils_Writer::NONE,true);
 	myWriter.SetProgramTextColor(JMD::JMD_Utils_Writer::BLUE,JMD::JMD_Utils_Writer::NONE,true);
@@ -250,12 +250,12 @@ int main( int argc, char **argv )
 	myWriter.SetListColor(JMD::JMD_Utils_Writer::WHITE);
 	myWriter.SetQueryColor(JMD::JMD_Utils_Writer::GREEN,JMD::JMD_Utils_Writer::NONE,true);
 	/*--- End Set Colors ---*/
-	
-	
+
+
 	/*----- Add Options - Flags and Callbacks - Alphabetical -----*/
 	/*--- End Add Options - Flags and Callbacks - Alphabetical ---*/
-	
-	
+
+
 	/*----- Add Options - Setters and Setter_Callbacks -----*/
 
     // input image
@@ -277,26 +277,26 @@ int main( int argc, char **argv )
     myOptions.Add_Option_Setter("--experiment","-e","Experiment to test.",&E,true);
 
 	/*--- End Add Options - Setters and Settter_Callbacks ---*/
-	
+
 	//parse help - return if false
 	if( !myOptions.Parse_Help(argc,argv) ) { return 0; }
-	
+
 	//----------------------------------------------------------------//
 	//------------------------- End Options --------------------------//
 	//----------------------------------------------------------------//
-	
-	
-	
+
+
+
 	//----------------------------------------------------------------//
 	//---------------------------- Setup -----------------------------//
 	//----------------------------------------------------------------//
-	
+
 	//extra argv vector
 	std::vector<std::string> Extra_Argv;
-		
+
 	//intro prompt
 	myWriter.Writer_IntroPrompt(ProgramName,"Joseph DeGol","University of Illinois","1.0","Help: ./Run_JMD_TestColorConversion --help","Program to test speed of different color conversion methods.");
-	
+
 	//parse options
 	myOptions.Parse(argc,argv,true,&Extra_Argv);
 
@@ -309,13 +309,13 @@ int main( int argc, char **argv )
 	//----------------------------------------------------------------//
 	//-------------------------- End Setup ---------------------------//
 	//----------------------------------------------------------------//
-	
-	
-	
+
+
+
 	//----------------------------------------------------------------//
 	//----------------------------- Run ------------------------------//
 	//----------------------------------------------------------------//
-	
+
     //an image was given on command line
     if( !Input_Image.empty() )
     {
@@ -329,8 +329,8 @@ int main( int argc, char **argv )
 
         //read okay?
         if( !image.data )
-        { 
-            myWriter.Writer_Warning(ProgramName, "Main", "Could not open: "+Input_Image, false); 
+        {
+            myWriter.Writer_Warning(ProgramName, "Main", "Could not open: "+Input_Image, false);
         }
         else
         {
@@ -340,7 +340,7 @@ int main( int argc, char **argv )
             double t0, t1, t2;
             double A;
             cv::Mat RGB, LAB;
-            
+
             //generate N random pixel locations
             std::vector<int> randu;
             std::vector<int> randv;
@@ -349,7 +349,7 @@ int main( int argc, char **argv )
                 randu.push_back( rand() % ncol );
                 randv.push_back( rand() % nrow );
             }
-            
+
 
             /*----- Experiment 1 -----*/
             // convert pixels to LAB using Vision_Process
@@ -393,8 +393,8 @@ int main( int argc, char **argv )
 
                     //convert
                     RGB = image(cv::Rect(u,v,1,1));
-                    cv::cvtColor(RGB,LAB,CV_BGR2Lab);
-                    
+                    cv::cvtColor(RGB,LAB,cv::COLOR_BGR2Lab);
+
                     //value
                     cv::Vec3b lab = LAB.at<cv::Vec3b>(0,0);
                     A = lab.val[1];
@@ -634,27 +634,27 @@ int main( int argc, char **argv )
     {
         myWriter.Writer_Warning(ProgramName,"Main","No image provided on command line",false);
     }
-	
+
 	//----------------------------------------------------------------//
 	//--------------------------- End Run ----------------------------//
 	//----------------------------------------------------------------//
-	
-	
-	
+
+
+
 	//----------------------------------------------------------------//
 	//-------------------------- Shutdown ----------------------------//
 	//----------------------------------------------------------------//
-	
+
 	//exit
 	myWriter.Writer_OutroPrompt(ProgramName);
-	
+
 	//return
 	return 0;
-	
+
 	//----------------------------------------------------------------//
 	//------------------------- End Shutdown -------------------------//
 	//----------------------------------------------------------------//
-	
+
 }
 
 //====================================================================//

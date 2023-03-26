@@ -1,18 +1,18 @@
 /*
  //====================================================================//
- 
+
  ==========================
  Joseph DeGol
  UIUC Fall 2015
  ==========================
  JMD ChromaTag Decode: Version 1.0
  ==========================
- 
+
  ================================================================
  JMD_ChromaTag_Decode.cpp
  A class for ChromaTag Decoding
  ================================================================
- 
+
  //====================================================================//
  */
 
@@ -85,7 +85,7 @@
 //---------------------------------------------------------------//
 //-------------------------- Private ----------------------------//
 //---------------------------------------------------------------//
-        
+
 /*--------------- Setup Methods ---------------*/
 
 /*----- Private Init -----*/
@@ -98,7 +98,7 @@ void JMD::JMD_ChromaTag_Decode::Private_Init(std::vector<double> *l_table_param,
 
 	//settings
 	mySettings = settings_param;
-	
+
 	//number of horizontal bits based on Tag Family
 	switch(mySettings->myTagFamily)
 	{
@@ -108,10 +108,10 @@ void JMD::JMD_ChromaTag_Decode::Private_Init(std::vector<double> *l_table_param,
 		case RGRBW_36H11: myNumHorizontalBits = 6; break;
 		default:          myNumHorizontalBits = 4; break;
 	}
-	
+
 	//build image grid
 	Private_BuildGrid(myImageGrid);
-	
+
 	//number of rings to use
 	switch(mySettings->myUseRingsForHomography)
 	{
@@ -119,7 +119,7 @@ void JMD::JMD_ChromaTag_Decode::Private_Init(std::vector<double> *l_table_param,
 		case USE_RINGS_ALL:   myNumRingsToUse = 3; break;
 		default: myNumRingsToUse = 1; break;
 	}
-	
+
 	//populate the image plane locations based on the number
 	//of rings that will be used
 	double s;
@@ -127,14 +127,14 @@ void JMD::JMD_ChromaTag_Decode::Private_Init(std::vector<double> *l_table_param,
 	{
 		//update s
 		s = (myNumRingsToUse - i) / myNumRingsToUse;
-		
+
 		//add four points
 		myImagePoints.push_back( cv::Point2f( s,  s) );	//top right
 		myImagePoints.push_back( cv::Point2f( s, -s) );	//bottom right
 		myImagePoints.push_back( cv::Point2f(-s, -s) );	//bottom left
 		myImagePoints.push_back( cv::Point2f(-s,  s) );	//top left
 	}
-    
+
     //generate tag codes
     Private_BuildTagFamily();
 }
@@ -147,13 +147,13 @@ void JMD::JMD_ChromaTag_Decode::Private_BuildGrid(std::vector<cv::Point2f> &grid
 	double gridstep = 2.0 / (2 + myNumHorizontalBits); //grid step = (1 - - 1) / (2 + #of horizontal grid squares)
 	double gridx = -1.0 + (gridstep + gridstep*0.5);
 	double gridy = -1.0 + (gridstep + gridstep*0.5);
-	
+
 	//for each vertical bit
 	for(int i = 0; i < myNumHorizontalBits; i++)
 	{
 		//grid y = furthest up + step
 		gridy = -1.0 + (gridstep + gridstep*0.5);
-		
+
 		//for each horizontal bit
 		for(int j = 0; j < myNumHorizontalBits; j++)
 		{
@@ -163,7 +163,7 @@ void JMD::JMD_ChromaTag_Decode::Private_BuildGrid(std::vector<cv::Point2f> &grid
 			//increment gridy by step
 			gridy += gridstep;
 		}
-		
+
 		//increment gridx by step
 		gridx += gridstep;
 	}
@@ -183,7 +183,7 @@ void JMD::JMD_ChromaTag_Decode::Private_BuildTagFamily()
     std::vector<unsigned long long> H0Codes;
     unsigned int max_hamming = mySettings->myMaxSearchHammingDistance;
     unsigned int numbits = myNumHorizontalBits * myNumHorizontalBits;
-    
+
     //get true codes
     switch(mySettings->myTagFamily)
 	{
@@ -193,22 +193,22 @@ void JMD::JMD_ChromaTag_Decode::Private_BuildTagFamily()
 		case RGRBW_36H11: Private_Family36H11(H0Codes); break;
 		default:          Private_Family16H5(H0Codes); break;
 	}
-    
+
     //check that Max Search Hamming Distance makes sense
     if(max_hamming > 3)
     {
         max_hamming = 3;
     }
-    
+
     //perturb codes by hamming distance to get final set of tags
     for(std::vector<unsigned long long>::iterator cit = H0Codes.begin(); cit != H0Codes.end(); ++cit)
     {
         //current code
         unsigned long long code = *cit;
-        
+
         //add current code
         Private_AddTagCode(code, code, 0);
-        
+
         //perturb by 1
         if(max_hamming >= 1)
         {
@@ -218,7 +218,7 @@ void JMD::JMD_ChromaTag_Decode::Private_BuildTagFamily()
                 Private_AddTagCode(code, code ^ (1L << i) , 1);
             }
         }
-        
+
         //perturb by 2
         if(max_hamming >= 2)
         {
@@ -231,7 +231,7 @@ void JMD::JMD_ChromaTag_Decode::Private_BuildTagFamily()
                 }
             }
         }
-        
+
         //perturb by 3
         if(max_hamming >= 3)
         {
@@ -256,14 +256,14 @@ void JMD::JMD_ChromaTag_Decode::Private_Family16H5(std::vector<unsigned long lon
 {
 	//clear codes just in case
 	codes_param.clear();
-	
+
 	//make space for 30 tags
 	codes_param.resize(30);
-	
+
 	//push back tag payloads
     codes_param[0] = 0x000000000000231bUL;    codes_param[1] = 0x0000000000002ea5UL;    codes_param[2] = 0x000000000000346aUL;
     codes_param[3] = 0x00000000000045b9UL;    codes_param[4] = 0x00000000000079a6UL;    codes_param[5] = 0x0000000000007f6bUL;
-    codes_param[6] = 0x000000000000b358UL;    codes_param[7] = 0x000000000000e745UL;    codes_param[8] = 0x000000000000fe59UL;    
+    codes_param[6] = 0x000000000000b358UL;    codes_param[7] = 0x000000000000e745UL;    codes_param[8] = 0x000000000000fe59UL;
     codes_param[9] = 0x000000000000156dUL;    codes_param[10] = 0x000000000000380bUL;    codes_param[11] = 0x000000000000f0abUL;
     codes_param[12] = 0x0000000000000d84UL;    codes_param[13] = 0x0000000000004736UL;    codes_param[14] = 0x0000000000008c72UL;
     codes_param[15] = 0x000000000000af10UL;    codes_param[16] = 0x000000000000093cUL;    codes_param[17] = 0x00000000000093b4UL;
@@ -279,10 +279,10 @@ void JMD::JMD_ChromaTag_Decode::Private_Family25H9(std::vector<unsigned long lon
 {
 	//clear codes just in case
 	codes_param.clear();
-	
+
 	//make space for 30 tags
 	codes_param.resize(35);
-	
+
 	//push back tag payloads
 	codes_param[0] = 0x000000000155cbf1UL;    codes_param[1] = 0x0000000001e4d1b6UL;
     codes_param[2] = 0x00000000017b0b68UL;    codes_param[3] = 0x0000000001eac9cdUL;    codes_param[4] = 0x00000000012e14ceUL;
@@ -304,10 +304,10 @@ void JMD::JMD_ChromaTag_Decode::Private_Family36H11(std::vector<unsigned long lo
 {
 	//clear codes just in case
 	codes_param.clear();
-	
+
 	//make space for 587 tags
 	codes_param.resize(587);
-	
+
 	//push back tag payloads
 	codes_param[0] = 0x0000000d5d628584UL;    codes_param[1] = 0x0000000d97f18b49UL;    codes_param[2] = 0x0000000dd280910eUL;
     codes_param[3] = 0x0000000e479e9c98UL;    codes_param[4] = 0x0000000ebcbca822UL;    codes_param[5] = 0x0000000f31dab3acUL;    codes_param[6] = 0x0000000056a5d085UL;
@@ -481,46 +481,46 @@ void JMD::JMD_ChromaTag_Decode::Private_Decode(cv::Mat &image_param)
 	TagBorderRing *curr_ring;
 	TagBorderSegment *curr_seg;
     TagCode *found_code;
-    
+
 	//for each detection
 	for(JMD_ChromaTag_Collection::iterator it = myDetections->begin(); it != myDetections->end(); ++it)
 	{
 		//ptr to current detection
 		curr_detection = *it;
-		
+
 		//Was Active? If not, break, we have reached end of active detections
 		if(!curr_detection->IsActive) { break; }
-		
+
 		//Pointer to detection's border
 		curr_borders = &(curr_detection->TagBorders);
-		
+
 		//for each border
 		for(int rit = 1; rit <= myNumRingsToUse; rit++)
 		{
 			//current ring
 			curr_ring = curr_borders->at( curr_borders->size() - rit );
-			
+
 			//for each segment
 			for(TagBorderRing::iterator sit = curr_ring->begin(); sit != curr_ring->end(); ++sit)
 			{
 				//current segment
 				curr_seg = *sit;
-				
+
 				//save corner point
 				tag_points.push_back( cv::Point2f( curr_seg->myLine.Point1()->U(), curr_seg->myLine.Point1()->V() ) );
 			}
 		}
-		
+
 		//try to find homography
 		cv::Mat H;
 		if( !Private_Homography(tag_points,H) )
 		{
 			continue;
 		}
-		
+
 		//Warp image grid to make sample grid
 		cv::perspectiveTransform( myImageGrid, grid_samples, H );
-		
+
 		//read off pixel values
 		unsigned char *p;
 		unsigned char R,G,B;
@@ -530,53 +530,53 @@ void JMD::JMD_ChromaTag_Decode::Private_Decode(cv::Mat &image_param)
 		double MinRedB   = JMD::DEF_PINF, MaxRedB   = JMD::DEF_NINF;
 		double MinGreenB = JMD::DEF_PINF, MaxGreenB = JMD::DEF_NINF;
 		for(int i = 0; i < grid_samples.size(); i++)
-		{	
+		{
             //U,V
 			U = static_cast<int>( grid_samples[i].x );
 			V = static_cast<int>( grid_samples[i].y );
-			
+
             //check if U,V is in image, skip over pixel spot if not
             if( U < 0 || V < 0 || U >= image_param.cols || V >= image_param.rows)
             {
                 continue;
             }
-            
+
 			//point to pixel row
 			p = image_param.ptr<unsigned char>(V);
 			j = 3 * U;
-			
+
 			//R, G, B values
 			B = p[j];
 			G = p[j + 1];
 			R = p[j + 2];
-			
+
 			//Convert to LAB
             hash_idx = HASH_RGB(R,G,B);
             LAB_L = myLAB_LTable->at( hash_idx );
-			
+
 			//store in red or green array
-			if(i == 5 || i == 6 || i == 9 || i == 10) 
+			if(i == 5 || i == 6 || i == 9 || i == 10)
 			{
 				//save red value
-				RedToB_Values[redct] = LAB_L; 
+				RedToB_Values[redct] = LAB_L;
 				redct++;
-				
+
 				//save max and min
 				if(LAB_L > MaxRedB) { MaxRedB = LAB_L; }
-				if(LAB_L < MinRedB) { MinRedB = LAB_L; } 
+				if(LAB_L < MinRedB) { MinRedB = LAB_L; }
 			}
-			else 
+			else
 			{
                 //save green value
-				GreenToB_Values[greenct] = LAB_L; 
-				greenct++; 
-				
+				GreenToB_Values[greenct] = LAB_L;
+				greenct++;
+
 				//save max and min
 				if(LAB_L > MaxGreenB) { MaxGreenB = LAB_L; }
 				if(LAB_L < MinGreenB) { MinGreenB = LAB_L; }
 			}
 		}
-        
+
         //cluster into code
         redct = 0;
         greenct = 0;
@@ -587,7 +587,7 @@ void JMD::JMD_ChromaTag_Decode::Private_Decode(cv::Mat &image_param)
         {
             //shift left 1, does nothing on first iteration
             code = (code << 1);
-            
+
             //red
             if(i == 5 || i == 6 || i == 9 || i ==10)
             {
@@ -617,7 +617,7 @@ void JMD::JMD_ChromaTag_Decode::Private_Decode(cv::Mat &image_param)
                 greenct++;
             }
         }
-		
+
         //Find Tag
         if( !Private_FindTagCode(code, &found_code) )
         {
@@ -631,7 +631,7 @@ void JMD::JMD_ChromaTag_Decode::Private_Decode(cv::Mat &image_param)
             curr_detection->TagBits = myNumHorizontalBits * myNumHorizontalBits;
             curr_detection->TagCode = found_code->myH0Code;
         }
-        
+
 		//clear tag points
 		tag_points.clear();
 	}
@@ -651,15 +651,15 @@ bool JMD::JMD_ChromaTag_Decode::Private_FindTagCode(unsigned long long code_para
         {
             //return TagCode
             *tag_code_param = &(got->second);
-            
+
             //found code
             return true;
         }
-        
+
         //rotate code
         code_param = Private_RotateCodeCW(code_param);
     }
-    
+
     //failed to find code
     return false;
 }
@@ -668,13 +668,13 @@ bool JMD::JMD_ChromaTag_Decode::Private_FindTagCode(unsigned long long code_para
 /*----- Private Homography -----*/
 void JMD::JMD_ChromaTag_Decode::Private_Homography()
 {
-	
+
 }
 #ifdef OPENCV_FOUND
 bool JMD::JMD_ChromaTag_Decode::Private_Homography(std::vector<cv::Point2f> &tag_points_param, cv::Mat &H_param)
-{	
+{
 	//try to find homography
-	try 
+	try
 	{
 		H_param = cv::findHomography(myImagePoints,tag_points_param);
 	}
@@ -682,7 +682,7 @@ bool JMD::JMD_ChromaTag_Decode::Private_Homography(std::vector<cv::Point2f> &tag
 	{
 		return false;
 	}
-	
+
 	//return success
 	return true;
 }
@@ -700,12 +700,12 @@ void JMD::JMD_ChromaTag_Decode::Private_AddTagCode(unsigned long long h0_code_pa
 {
     //code struct
     TagCode tmp;
-    
+
     //populate values
     tmp.myH0Code = h0_code_param;
     tmp.myCode   = code_param;
     tmp.myHammingDistance = hamming_param;
-    
+
     //add code
     myTagCodes[code_param] = tmp;
 }
@@ -720,7 +720,7 @@ unsigned long long JMD::JMD_ChromaTag_Decode::Private_RotateCodeCW(unsigned long
     unsigned long long rot_code = 0;
     unsigned long long shift;
     int idx;
-    
+
     //for each row, starting at end
     for(int r = myNumHorizontalBits - 1; r >= 0; r--)
     {
@@ -729,7 +729,7 @@ unsigned long long JMD::JMD_ChromaTag_Decode::Private_RotateCodeCW(unsigned long
         {
             //shift 1 left
             rot_code = rot_code << 1;
-            
+
             idx = r + myNumHorizontalBits * c;
             shift = static_cast<unsigned long long>(1) << idx;
             if( (code_param & shift) != 0 )
@@ -738,14 +738,14 @@ unsigned long long JMD::JMD_ChromaTag_Decode::Private_RotateCodeCW(unsigned long
             }
         }
     }
-    
+
     //return code
     return rot_code;
 }
 /*--- End Private Rotate Code CW ---*/
 
 /*------------- End Decode Helpers -------------*/
-		
+
 //---------------------------------------------------------------//
 //------------------------ end Private --------------------------//
 //---------------------------------------------------------------//
@@ -766,10 +766,10 @@ JMD::JMD_ChromaTag_Decode::JMD_ChromaTag_Decode(JMD_ChromaTag_Collection *collec
 }
 /*------------- End Constructors -------------*/
 
-	
-	
+
+
 /*--------------- Destructors ---------------*/
-JMD::JMD_ChromaTag_Decode::~JMD_ChromaTag_Decode() 
+JMD::JMD_ChromaTag_Decode::~JMD_ChromaTag_Decode()
 {
 
 }
@@ -780,22 +780,22 @@ JMD::JMD_ChromaTag_Decode::~JMD_ChromaTag_Decode()
 /*--------------- Setup ---------------*/
 
 /*----- Init -----*/
-void JMD::JMD_ChromaTag_Decode::Init(std::vector<double> *l_table_param, std::vector<double> *a_table_param, std::vector<double> *b_table_param, JMD_ChromaTag_Settings *settings_param) 
-{ 
+void JMD::JMD_ChromaTag_Decode::Init(std::vector<double> *l_table_param, std::vector<double> *a_table_param, std::vector<double> *b_table_param, JMD_ChromaTag_Settings *settings_param)
+{
 	Private_Init(l_table_param,a_table_param,b_table_param,settings_param);
 }
 /*--- End Init ---*/
 
 /*------------- End Setup -------------*/
 
-		
-		
-/*--------------- Tag Decode Methods ---------------*/    
+
+
+/*--------------- Tag Decode Methods ---------------*/
 
 /*---------- Detect ----------*/
 void JMD::JMD_ChromaTag_Decode::Decode(JMD::JMD_Vision_Image &image_param)
 {
-	
+
 }
 #ifdef OPENCV_FOUND
 void JMD::JMD_ChromaTag_Decode::Decode( cv::Mat &image_param )
@@ -804,17 +804,17 @@ void JMD::JMD_ChromaTag_Decode::Decode( cv::Mat &image_param )
 }
 #endif
 /*-------- End Detect --------*/
-            
+
 /*------------- End Tag Decode Methods -------------*/
-        
-        
+
+
 
 /*--------------- Utility ---------------*/
 /*--------------- Utility ---------------*/
 
 
 
-/*--------------- Setters/Getters ---------------*/    
+/*--------------- Setters/Getters ---------------*/
 /*------------- End Setters/Getters -------------*/
 
 
@@ -835,15 +835,15 @@ void JMD::JMD_ChromaTag_Decode::DEBUG_ShowLAB(cv::Mat &image_param)
     cv::Mat ImL;
     cv::Mat ImA;
     cv::Mat ImB;
-    
+
     //convert
-    cv::cvtColor(image_param,ImLAB,CV_BGR2Lab);
-    
+    cv::cvtColor(image_param,ImLAB,cv::COLOR_BGR2Lab);
+
     //channels
     cv::extractChannel(ImLAB,ImL,0);
     cv::extractChannel(ImLAB,ImA,1);
     cv::extractChannel(ImLAB,ImB,2);
-    
+
     //show
     cv::namedWindow( "DEBUG_ShowLAB - L", cv::WINDOW_AUTOSIZE );
     cv::imshow( "DEBUG_ShowLAB - L", ImL );
@@ -882,32 +882,32 @@ void JMD::JMD_ChromaTag_Decode::DEBUG_ShowCodes(cv::Mat &image_param)
 	TagBorderSet curr_border;
 	TagBorderRing *curr_ring;
 	TagBorderSegment *curr_seg;
-	
+
 	//for each detection
 	for(JMD_ChromaTag_Collection::iterator cit = myDetections->begin(); cit != myDetections->end(); ++cit)
 	{
 		//quit if unactive
 		if( !(*cit)->IsActive ) { return; }
-        
+
         //skip if no code
         if( !(*cit)->IsCode) { continue; }
-		
+
 		//current border, outer ring
 		curr_border = (*cit)->TagBorders;
         curr_ring = curr_border.back();
-		
+
         //get left, top, right, and bottom most points
-        JMD_Vision_Point2D *left_most  = curr_ring->back()->myLine.Point1(); 
-        JMD_Vision_Point2D *top_most   = curr_ring->back()->myLine.Point1(); 
+        JMD_Vision_Point2D *left_most  = curr_ring->back()->myLine.Point1();
+        JMD_Vision_Point2D *top_most   = curr_ring->back()->myLine.Point1();
         JMD_Vision_Point2D *right_most = curr_ring->back()->myLine.Point1();
         JMD_Vision_Point2D *bot_most   = curr_ring->back()->myLine.Point1();
-        
+
         //for each segment
         for(TagBorderRing::iterator sit = curr_ring->begin(); sit != curr_ring->end(); ++sit)
         {
             curr_seg = *sit;
             JMD_Vision_Point2D *Pt1 = curr_seg->myLine.Point1();
-            
+
             //left most
             if(Pt1->U() < left_most->U() )  { left_most  = Pt1; }
             //right most
@@ -917,7 +917,7 @@ void JMD::JMD_ChromaTag_Decode::DEBUG_ShowCodes(cv::Mat &image_param)
             //down most
             if(Pt1->U() < bot_most->U() )   { bot_most   = Pt1; }
         }
-        
+
         //decide where to draw text
         char str[200];
         sprintf(str,"%llu",(*cit)->TagCode);
@@ -929,7 +929,7 @@ void JMD::JMD_ChromaTag_Decode::DEBUG_ShowCodes(cv::Mat &image_param)
         {
             cv::putText(image_param, str, cv::Point2f(left_most->U()-50,left_most->V()), cv::FONT_HERSHEY_PLAIN, 1.2,  cv::Scalar(255,0,0,255),2);
         }
-		
+
 	}
 }
 /*--- End DEBUG ShowCodes ---*/
@@ -941,7 +941,7 @@ void JMD::JMD_ChromaTag_Decode::DEBUG_OutputCodes()
     {
         //code
         TagCode tmp = x.second;
-        
+
         //convert to binary
         std::bitset<16> bcode0(tmp.myH0Code);
         std::bitset<16> bcode1(tmp.myCode);

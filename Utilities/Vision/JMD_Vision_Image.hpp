@@ -4,33 +4,33 @@
 
 /*
  //====================================================================//
- 
+
  ==========================
  Joseph DeGol
  UIUC Fall 2014
  ==========================
  JMD Vision Image: Version 1.0
  ==========================
- 
+
  ================================================================
  JMD_Vision_Image.hpp
  An image class
  ================================================================
- 
+
  List of Functions:
- 
+
  ----- Enumerations -----
- 
+
  --- End Enumerations ---
- 
+
  ----- Constructors -----
- 
+
  --- end Constructors ---
- 
+
  ----- Utility Methods -----
- 
+
  --- End Utility Methods ---
- 
+
  Notes:
  * This image class works similarly to my Matrix class but uses only
    unsigned char data. When calculations need to be done, such as with
@@ -56,6 +56,7 @@
 
 //system
 #include <cstring>
+#include <cmath>
 
 //utilities
 #include "JMD_Utils_Writer.hpp"
@@ -107,7 +108,7 @@
 namespace JMD {
 	//class
 	class JMD_Vision_Image;
-	
+
 	//friend operators >> , <<
 	std::ostream &operator << (std::ostream &os, const JMD_Vision_Image &image_param);
 	std::istream &operator >> (std::istream &is, JMD_Vision_Image &image_param);
@@ -131,7 +132,7 @@ namespace JMD {
 
 
 namespace JMD {
-	
+
     //====================================================================//
     //====================================================================//
     //=================== JMD Vision Image Definition ====================//
@@ -139,10 +140,10 @@ namespace JMD {
     //====================================================================//
     class JMD_Vision_Image
     {
-        
+
         /*--------------- Enumerations ---------------*/
         public:
-        
+
         /*----- Memory Type -----*/
         // Is the image data stored as:
         //    packed: R(0) G(0) B(0) R(1) G(1) B(1) ... etc
@@ -152,7 +153,7 @@ namespace JMD {
         // MEMORY_PLANAR - planar storage
         typedef enum Memory_Type { MEMORY_PACKED = 0, MEMORY_PLANAR } Memory_Type;
         /*--- End Memory Type ---*/
-        
+
         /*----- Color Space -----*/
         // color space of image
         //
@@ -162,16 +163,16 @@ namespace JMD {
         // COLOR_GRAY - (R+G+B)/3 or Luminance
         typedef enum Color_Space { COLOR_RGB = 0, COLOR_YUV, COLOR_LAB, COLOR_GRAY} Color_Space;
         /*--- End Color Space ---*/
-        
+
         /*------------- End Enumerations -------------*/
-        
+
         //---------------------------------------------------------------//
         //------------------------- Private -----------------------------//
         //---------------------------------------------------------------//
         private:
-        
+
         /*--------------- Variables ---------------*/
-		
+
 		//image properties
 		unsigned int  myHeight;
 		unsigned int  myWidth;
@@ -179,26 +180,26 @@ namespace JMD {
 		unsigned int  mySize;
 		Memory_Type   myMemType;
 		Color_Space   myColorSpace;
-		
+
 		//flags
 		bool isHeapMemory;
 		bool isHeapWriter;
 		//bool isPrecomputed;
-		
+
 		//data
 		unsigned char *myData;
-		
+
 		//precomputed lookup tables
 		unsigned int Lookup_SubsToIdx[960][1280];
 		//unsigned int *
-		
+
 		//writer
 		JMD_Utils_Writer *myWriter;
-		
+
         /*------------- End Variables -------------*/
-        
+
         /*--------------- Helpers ---------------*/
-        
+
         /*----- Private Init -----*/
         // does all the initialization of private instance variables
         //
@@ -208,7 +209,7 @@ namespace JMD {
         //    color_param - RGB,YUV,LAB
         void Private_Init(JMD_Utils_Writer *writer_param = NULL, Memory_Type memory_param = MEMORY_PACKED, Color_Space color_param = COLOR_RGB);
         /*--- End Private Init ---*/
-        
+
         /*----- Private Create -----*/
         // does all the work for allocating new memory
         //
@@ -218,19 +219,19 @@ namespace JMD {
         //    channels_param - channels for image
         void Private_Create(unsigned int height_param, unsigned int width_param, unsigned int channels_param, Memory_Type memory_param, Color_Space color_param = COLOR_RGB);
         /*--- End Private Create ---*/
-        
+
         /*------------- End Helpers -------------*/
-        
+
         //---------------------------------------------------------------//
         //----------------------- end Private ---------------------------//
         //---------------------------------------------------------------//
-        
-        
+
+
         //---------------------------------------------------------------//
         //-------------------------- Public -----------------------------//
         //---------------------------------------------------------------//
         public:
-        
+
 		/*--------------- Constructors ---------------*/
 		// Constructor
 		// sets a pointer to given data, no memory allocation
@@ -246,15 +247,15 @@ namespace JMD {
 		JMD_Vision_Image(const unsigned int height_param, const unsigned int width_param, const unsigned int channels_param, unsigned char *data_param, Memory_Type memory_param = MEMORY_PACKED, Color_Space color_param = COLOR_RGB, JMD_Utils_Writer* writer_param = NULL);
 		//JMD_Vision_Image(const JMD_Vision_Image &image_param);
 		/*------------- end Constructors -------------*/
-		
-		
+
+
 		/*--------------- Destructors ---------------*/
 		~JMD_Vision_Image();
 		/*-------------- End Destructors ------------*/
-		
-        
+
+
         /*--------------- Utility Methods ---------------*/
-        
+
         /*----- Create -----*/
         // allocates memory for the data provided. If an unsigned char
         // passed in, the data is converted to a double image. Double
@@ -272,7 +273,7 @@ namespace JMD {
         void Create(unsigned int height_param, unsigned int width_param, unsigned int channels_param, unsigned char *data_param, Memory_Type memory_param = MEMORY_PACKED, Color_Space color_param = COLOR_RGB);
         void Create(unsigned int height_param, unsigned int width_param, unsigned int channels_param, unsigned char  data_param , Memory_Type memory_param = MEMORY_PACKED, Color_Space color_param = COLOR_RGB);
         /*--- End Create ---*/
-        
+
         /*----- Fill -----*/
         // fills image with a scalar
         //
@@ -280,7 +281,7 @@ namespace JMD {
         //    scalar_param - value to fill image with
         void Fill(const unsigned char scalar_param);
         /*--- End Fill ---*/
-        
+
         /*----- Clear -----*/
         // destroys allocated image data and clears data pointers, does
         // destroy an alloacted writer and is not the same as deleting
@@ -288,9 +289,9 @@ namespace JMD {
         //
         void Clear();
         /*--- End Clear ---*/
-        
+
         /*----- SubscriptsToIndex -----*/
-        // takes row, column, and tunnel indices and returns an index 
+        // takes row, column, and tunnel indices and returns an index
         // value to the flattened matrix (array) of data
         //
         // input:
@@ -305,7 +306,7 @@ namespace JMD {
 		/*----- IndexToSubscripts -----*/
 		// takes an index value and returns the row, column, and tunnel
 		// indices
-		// 
+		//
 		// input:
 		//    index_param - index to flattened matrix value
 		//    row_index_param - ptr to row index to populate
@@ -313,23 +314,23 @@ namespace JMD {
 		//    tun_index_param - ptr to tunnel index to populate
 		void IndexToSubscripts(unsigned int index_param, unsigned int *row_index_param, unsigned int *col_index_param, unsigned int *tun_index_param);
 		/*--- End IndexToSubscripts ---*/
-        
+
         /*------------- End Utility Methods -------------*/
-        
-        
+
+
         /*--------------- Processing Methods ---------------*/
-        
+
         void RGBToYUV(JMD::JMD_Vision_Image &image_param);
 		void RGBToLAB(JMD::JMD_Vision_Image &image_param);
 		void RGBToGray(JMD::JMD_Vision_Image &image_param);
 		/*--- End RGBTo ---*/
-		
+
 		/*----- YUVTo -----*/
 		void YUVToRGB(JMD::JMD_Vision_Image &image_param);
 		void YUVToLAB(JMD::JMD_Vision_Image &image_param);
 		void YUVToGray(JMD::JMD_Vision_Image &image_param);
 		/*--- End YUVTo ---*/
-		
+
 		/*----- LABTo -----*/
 		void LABToRGB(JMD::JMD_Vision_Image &image_param);
 		void LABToYUV(JMD::JMD_Vision_Image &image_param);
@@ -345,7 +346,7 @@ namespace JMD {
 		void Color(JMD_Vision_Image &image_param, Color_Space color_param);
 		JMD_Vision_Image Color(Color_Space color_param);
 		/*--- End Color ---*/
-		
+
         /*----- Gradient -----*/
         // computes the image gradient: magnitude and direction
         //
@@ -357,46 +358,46 @@ namespace JMD {
         //    subsample_param - NOT USED CURRENTLY
         void Gradient(JMD_Vision_Image &magnitude_param, JMD_Vision_Image &direction_param, int force_channel_param = DEF_DUMMY_INT, unsigned int border_param = 0, unsigned int subsample_param = 0);
         /*--- End Gradient ---*/
-        
+
         /*------------- End Processing Methods -------------*/
-        
-        
+
+
         /*--------------- Setters/Getters ---------------*/
-        
+
         /*----- Width -----*/
         unsigned int Cols();
         unsigned int Width();
         /*--- End Width ---*/
-        
+
         /*----- Height -----*/
         unsigned int Rows();
         unsigned int Height();
         /*--- End Height ---*/
-        
+
         /*----- Channels -----*/
         unsigned int Channels();
         /*--- End Channels ---*/
-        
+
         /*----- Channel -----*/
         JMD_Vision_Image Channel( unsigned int channel_param ) const;
         void             Channel( unsigned int channel_param, JMD_Vision_Image &dest_param ) const;
         /*--- End Channel ---*/
-        
+
         /*----- Size -----*/
         unsigned int Size();
         /*--- End Size ---*/
-        
+
         /*----- Data -----*/
         unsigned char* Data();
 		unsigned char  Data(const unsigned int row_index_param, const unsigned int col_index_param, const unsigned int tun_index_param) const;
 		unsigned char& Data(const unsigned int row_index_param, const unsigned int col_index_param, const unsigned int tun_index_param);
         /*--- End Data ---*/
-        
+
         /*------------- End Setters/Getters -------------*/
-        
-        
+
+
         /*--------------- Operator Overloads ---------------*/
-        
+
         /*----- = operator -----*/
         // does a deep copy of data, and sets pointers and parameters
         //
@@ -404,7 +405,7 @@ namespace JMD {
         //    rhs_param - image to copy
         JMD_Vision_Image& operator=(const JMD_Vision_Image &rhs_param);
         /*--- End = operator ---*/
-        
+
         /*----- () operator -----*/
         // accesses a data member in the image, same as calling Data()
         //
@@ -420,33 +421,33 @@ namespace JMD {
         unsigned char  operator()(const unsigned int row_index_param, const unsigned int col_index_param, const unsigned int tun_index_param) const;
         unsigned char& operator()(const unsigned int row_index_param, const unsigned int col_index_param, const unsigned int tun_index_param);
         /*--- End () operator ---*/
-        
+
         /*----- Operator << -----*/
         // passes along the image data in an out stream object, for use
 		// in things like cout; e.g. cout << image_param;
-		// 
+		//
         friend std::ostream& operator << (std::ostream &os, const JMD::JMD_Vision_Image &image_param);
         /*--- End Operator << ---*/
-        
+
         /*----- Operator >> -----*/
         friend std::istream& operator >> (std::istream &is, JMD::JMD_Vision_Image &image_param);
         /*--- End Operator >> ---*/
-        
+
         /*------------- End Operator Overloads -------------*/
-        
-        
+
+
         //---------------------------------------------------------------//
         //------------------------ end Public ---------------------------//
         //---------------------------------------------------------------//
-        
-        
+
+
     };
     //====================================================================//
     //====================================================================//
     //====================================================================//
     //====================================================================//
     //====================================================================//
-    
+
 }//end namespace JMD
 
 

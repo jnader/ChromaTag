@@ -1,19 +1,19 @@
 /*
  //--------------------------------------------------------------------//
- 
+
  --------------------------
  Joseph DeGol
  UIUC Fall 2016
  --------------------------
  Run_JMD_TestColorSpace: Version 1.0
  --------------------------
- 
+
  ----------------------------------------------------------------
  Run_JMD_TestColorSpace.cpp
  This program allows a user to see how images look when converted
  to other colorspaces
  ----------------------------------------------------------------
- 
+
  //--------------------------------------------------------------------//
 */
 
@@ -88,7 +88,7 @@ JMD_Utils_Writer  myWriter;
 JMD_Utils_Options myOptions(ProgramName,"1.0","Joseph DeGol","University of Illinois",Description,&myWriter);
 
 //LCM
-#ifdef LCM_FOUND 
+#ifdef LCM_FOUND
 lcm::LCM myLCM;
 #endif
 
@@ -98,7 +98,7 @@ lcm::LCM myLCM;
 std::string LCM_In_Channel  = "";
 
 /*--- End Options ---*/
-	
+
 //--------------------------------------------------------------------//
 //---------------------------- Globals -------------------------------//
 //--------------------------------------------------------------------//
@@ -125,30 +125,30 @@ std::string LCM_In_Channel  = "";
 
 /*----- Run_LCM -----*/
 #ifdef LCM_FOUND
-class Handler 
+class Handler
 {
     public:
         ~Handler() {}
         void handleMessage(const lcm::ReceiveBuffer* rbuf, const std::string& chan, const JMD::LCM_Image_Type *myLCMImage)
-        {	
+        {
 			//copy buffer to OpenCV Mat
 			cv::Mat image( myLCMImage->Height, myLCMImage->Width, CV_MAKETYPE(0,myLCMImage->Channels) );
 			std::copy( myLCMImage->Data.begin(), myLCMImage->Data.end(), image.data );
-			
+
 			//variables
 			cv::Mat ImLAB;
 			cv::Mat ImL;
 			cv::Mat ImA;
 			cv::Mat ImB;
-			
+
 			//convert
-			cv::cvtColor(image,ImLAB,CV_BGR2Lab);
-			
+			cv::cvtColor(image,ImLAB,cv::COLOR_BGR2Lab);
+
 			//channels
 			cv::extractChannel(ImLAB,ImL,0);
 			cv::extractChannel(ImLAB,ImA,1);
 			cv::extractChannel(ImLAB,ImB,2);
-			
+
 			//show
 			cv::namedWindow( "DEBUG_ShowLAB - L", cv::WINDOW_AUTOSIZE );
 			cv::imshow( "DEBUG_ShowLAB - L", ImL );
@@ -163,24 +163,24 @@ class Handler
 void Run_LCM()
 {
 	/*--- Setup ---*/
-	
+
 	//init LCM
 	if(!myLCM.good()) { myWriter.Writer_Error(ProgramName,"LCM_Setup","Error initializing lcm.",true); }
-	
+
 	/*- End Setup -*/
-	
+
 	/*--- Run ---*/
-	
+
 	//create handler
 	Handler myHandler;
-	
+
 	//subscribe to channel
     myLCM.subscribe(LCM_In_Channel, &Handler::handleMessage, &myHandler);
-    
+
     //run
 	myWriter.Writer_Note(ProgramName,"Run_LCM","Subscribed to " + LCM_In_Channel + ". Press ctrl-c to quit.",true);
     while(0 == myLCM.handle());
-	
+
 	/*- End Run -*/
 }
 #else
@@ -200,7 +200,7 @@ void Process_Images(std::vector<std::string> &ImageList)
 		//read image
 		cv::Mat image;
 		image = cv::imread(*it);
-	
+
 		//read okay?
 		if(!image.data ) { myWriter.Writer_Warning(ProgramName,"Process_Images","Could not open: "+(*it),false); }
 		else
@@ -210,15 +210,15 @@ void Process_Images(std::vector<std::string> &ImageList)
 			cv::Mat ImL;
 			cv::Mat ImA;
 			cv::Mat ImB;
-			
+
 			//convert
-			cv::cvtColor(image,ImLAB,CV_BGR2Lab);
-			
+			cv::cvtColor(image,ImLAB,cv::COLOR_BGR2Lab);
+
 			//channels
 			cv::extractChannel(ImLAB,ImL,0);
 			cv::extractChannel(ImLAB,ImA,1);
 			cv::extractChannel(ImLAB,ImB,2);
-			
+
 			//show
 			cv::namedWindow( "DEBUG_ShowLAB - L", cv::WINDOW_AUTOSIZE );
 			cv::imshow( "DEBUG_ShowLAB - L", ImL );
@@ -236,10 +236,10 @@ void Process_Images(std::vector<std::string> &ImageList) { myWriter.Writer_Warni
 /*--- End Process Images ---*/
 
 /*----- Signal Handler -----*/
-static void Signal_Handler(int signum) 
-{	
+static void Signal_Handler(int signum)
+{
 	//exit
-	myWriter.Writer_OutroPrompt(ProgramName); 
+	myWriter.Writer_OutroPrompt(ProgramName);
 	exit(0);
 }
 void Setup_SignalHandler()
@@ -290,15 +290,15 @@ void Setup_SignalHandler()
 //====================================================================//
 
 int main( int argc, char **argv )
-{   
+{
 
 	//----------------------------------------------------------------//
 	//--------------------------- Options ----------------------------//
 	//----------------------------------------------------------------//
-	
+
 	//description vector
 	vector<string> description_vector;
-	
+
 	/*----- Set Colors -----*/
 	myWriter.SetProgramHeaderColor(JMD::JMD_Utils_Writer::WHITE,JMD::JMD_Utils_Writer::NONE,true);
 	myWriter.SetProgramTextColor(JMD::JMD_Utils_Writer::BLUE,JMD::JMD_Utils_Writer::NONE,true);
@@ -311,89 +311,89 @@ int main( int argc, char **argv )
 	myWriter.SetListColor(JMD::JMD_Utils_Writer::WHITE);
 	myWriter.SetQueryColor(JMD::JMD_Utils_Writer::GREEN,JMD::JMD_Utils_Writer::NONE,true);
 	/*--- End Set Colors ---*/
-	
-	
+
+
 	/*----- Add Options - Flags and Callbacks - Alphabetical -----*/
-	
+
 	/*--- End Add Options - Flags and Callbacks - Alphabetical ---*/
-	
-	
+
+
 	/*----- Add Options - Setters and Setter_Callbacks -----*/
-	
+
 	//lcm
 	myOptions.Add_Option_Setter("--subscribe_lcm","-b","Subscribes to image data on LCM channel.",&LCM_In_Channel,true);
-	
+
 	/*--- End Add Options - Setters and Settter_Callbacks ---*/
-	
+
 	//parse help - return if false
 	if( !myOptions.Parse_Help(argc,argv) ) { return 0; }
-	
+
 	//----------------------------------------------------------------//
 	//------------------------- End Options --------------------------//
 	//----------------------------------------------------------------//
-	
-	
-	
+
+
+
 	//----------------------------------------------------------------//
 	//---------------------------- Setup -----------------------------//
 	//----------------------------------------------------------------//
-	
+
 	//extra argv vector
 	std::vector<std::string> Extra_Argv;
-		
+
 	//intro prompt
 	myWriter.Writer_IntroPrompt(ProgramName,"Joseph DeGol","University of Illinois","1.0","Help: ./Run_JMD_TestColorSpace --help","Program to view images in various colorspaces.");
-	
+
 	//parse options
 	myOptions.Parse(argc,argv,true,&Extra_Argv);
-	
+
 	//signal handler
 	Setup_SignalHandler();
-		
+
 	//----------------------------------------------------------------//
 	//-------------------------- End Setup ---------------------------//
 	//----------------------------------------------------------------//
-	
-	
-	
+
+
+
 	//----------------------------------------------------------------//
 	//----------------------------- Run ------------------------------//
 	//----------------------------------------------------------------//
-	
+
 	//LCM
 	if( !(LCM_In_Channel.empty()) ) { Run_LCM(); }
-	
+
 	//from file
 	else if( !Extra_Argv.empty() ) { Process_Images(Extra_Argv); }
-	
+
 	//no valid input
-	else 
-	{ 
+	else
+	{
 		myWriter.Writer_Warning(ProgramName,"Main","No valid input method provided:",false);
 		myWriter.Writer_Continued("        0. No images provided on command line.",true);
 		myWriter.Writer_Continued("        1. Subscribe with LCM (-b) not given or libraries missing.",true);
 	}
-	
+
 	//----------------------------------------------------------------//
 	//--------------------------- End Run ----------------------------//
 	//----------------------------------------------------------------//
-	
-	
-	
+
+
+
 	//----------------------------------------------------------------//
 	//-------------------------- Shutdown ----------------------------//
 	//----------------------------------------------------------------//
-	
+
 	//exit
 	myWriter.Writer_OutroPrompt(ProgramName);
-	
+
 	//return
 	return 0;
-	
+
 	//----------------------------------------------------------------//
 	//------------------------- End Shutdown -------------------------//
 	//----------------------------------------------------------------//
-	
+
 }
 
 //====================================================================//

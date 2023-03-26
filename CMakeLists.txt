@@ -1,7 +1,7 @@
 #-----------------------------------------------------#
 # Top Level CMakeLists.txt
 # Starting point for building ChromaTag. Starts by building
-# Utilities, then builds ChromaTag. OpenCV must already be 
+# Utilities, then builds ChromaTag. OpenCV must already be
 # installed.
 #
 # Written by Joseph DeGol
@@ -83,19 +83,19 @@ endmacro()
 
 #recursive include
 macro (include_directories_r top_include_dir)
-	
+
     #for each file
 	FILE(GLOB _ALL_FILES ${top_include_dir} ${top_include_dir}/*)
 	FOREACH(_FILE ${_ALL_FILES})
-	
+
 	  #if is directory, and not the parent directory
 	  GET_FILENAME_COMPONENT(_FILE_NAME ${_FILE} NAME)
 	  GET_FILENAME_COMPONENT(_FILE_TOP_NAME ${top_include_dir} NAME)
 	  IF(IS_DIRECTORY ${_FILE} AND NOT ${_FILE_NAME} STREQUAL ${_FILE_TOP_NAME})
-	  
+
 	    #first char of dir name
 	    STRING(SUBSTRING ${_FILE_NAME} 0 1 _FILE_SUBSTR)
-	    
+
 	    #if not '.'
 	    IF( NOT ${_FILE_SUBSTR} STREQUAL . )
 		  INCLUDE_DIRECTORIES(${_FILE})
@@ -103,7 +103,7 @@ macro (include_directories_r top_include_dir)
 		  include_directories_r(${_FILE})
 		ENDIF()
 	  ENDIF()
-	  
+
 	ENDFOREACH()
 endmacro()
 
@@ -172,11 +172,11 @@ cmake_minimum_required(VERSION 2.8)
 prompt_top("Entering Top Level CMakeLists.txt.")
 
 if (UNIX)
-    
+
     #Create Project
 	project(ChromaTag)
 	update_top("Creating Project: ChromaTag")
-	
+
     #Unix Settings
     update_top("Unix Machine Found.")
 	SET_PROPERTY(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
@@ -184,7 +184,7 @@ if (UNIX)
     set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
-	
+
 	#Release Setup
 	if (RELEASE)
 	    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
@@ -196,10 +196,11 @@ if (UNIX)
 	    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O0")
 	    SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O0")
     endif()
-	
+
 	#find required libraries
 	find_lib(OpenCV)
     if(OpenCV_FOUND)
+		include_directories(${OpenCV_INCLUDE_DIRS})
         set(Dependencies ${Dependencies} ${OpenCV_LIBS})
     endif(OpenCV_FOUND)
 
@@ -208,12 +209,12 @@ if (UNIX)
     if(LCM_FOUND)
         set(Dependencies ${Dependencies} ${LCM_LIBRARIES})
     endif(LCM_FOUND)
-    
+
     #Add Utilities
     include_directories(Utilities)
     include_directories_r(Utilities)
     add_subdirectory(Utilities)
-    
+
     #Add ChromaTag
     include_directories(Detector)
     include_directories_r(Detector)
@@ -232,7 +233,7 @@ if (UNIX)
 else()
     #Windows
     update_top("Windows Machine Found.")
-    
+
     #Quit
     update_top("Implementation not tested on Windows. You will have to edit this CMakeLists.txt yourself to try with Windows.")
 endif()
